@@ -59,7 +59,7 @@ At a minimum, you need:
 #### 1. Fork or clone this repository
 
 ```
-$ git clone https://github.com/wjlow/intro-to-scala.git
+$ git clone https://github.com/lukestephenson-zendesk/intro-to-scala.git
 $ cd intro-to-scala/
 ```
 
