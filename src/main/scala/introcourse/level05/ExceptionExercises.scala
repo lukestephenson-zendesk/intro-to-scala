@@ -10,25 +10,27 @@ object ExceptionExercises {
 
   //Exceptions that will be thrown
   class EmptyNameException(message: String) extends Exception(message)
+
   class InvalidAgeValueException(message: String) extends Exception(message)
+
   class InvalidAgeRangeException(message: String) extends Exception(message)
 
   //test data of names and age pairs
   val personStringPairs =
     List(("Tokyo", "30"),
-         ("Moscow", "5o"),
-         ("The Professor", "200"),
-         ("Berlin", "43"),
-         ("Arturo Roman", "0"),
-         ("", "30"))
+      ("Moscow", "5o"),
+      ("The Professor", "200"),
+      ("Berlin", "43"),
+      ("Arturo Roman", "0"),
+      ("", "30"))
 
-/**
-  * Handling validation using Exceptions will come naturally if you are coming
-  * to Scala from languages like Java or Ruby. In Scala there is a better way
-  * to handle these scenarios, which we will get into later. For now let's
-  * use Exceptions to handle the following scenarios and see where the
-  * pain points lie.
-  */
+  /**
+    * Handling validation using Exceptions will come naturally if you are coming
+    * to Scala from languages like Java or Ruby. In Scala there is a better way
+    * to handle these scenarios, which we will get into later. For now let's
+    * use Exceptions to handle the following scenarios and see where the
+    * pain points lie.
+    */
 
   /**
     * Implement the function getName, so that it either accepts the supplied name
@@ -43,7 +45,13 @@ object ExceptionExercises {
     *
     * Hint: use the isEmpty method on String
     */
-  def getName(providedName: String) : String = ???
+  def getName(providedName: String): String = {
+    if (providedName.isEmpty) {
+      throw new EmptyNameException("provided name is empty")
+    } else {
+      providedName
+    }
+  }
 
   /**
     * Implement the function getAge, so that it either accepts the supplied age
@@ -62,12 +70,17 @@ object ExceptionExercises {
     *
     * Hint: use the toInt method to convert a String to an Int.
     */
-  def getAge(providedAge: String) : Int =
-      try {
-        ???
-      } catch {
-        case _: NumberFormatException => ???
+  def getAge(providedAge: String): Int =
+    try {
+      val validNumber = providedAge.toInt
+      if (validNumber > 0 && validNumber <= 120) {
+        validNumber
+      } else {
+        throw new InvalidAgeRangeException(s"provided age should be between 1-120: $validNumber")
       }
+    } catch {
+      case _: NumberFormatException => throw new InvalidAgeValueException(s"provided age is invalid: $providedAge")
+    }
 
 
   /**
@@ -92,7 +105,11 @@ object ExceptionExercises {
     *
     * Hint: Use `getName` and `getAge` from above.
     */
-  def createPerson(name: String, age: String): Person = ???
+  def createPerson(name: String, age: String): Person = {
+    val validName = getName(name)
+    val validAge = getAge(age)
+    Person(validName, validAge)
+  }
 
   /**
     * Implement the function createValidPeople to create a List of Person instances
@@ -107,15 +124,28 @@ object ExceptionExercises {
     * What issues do you run into (if any)?
     */
   def createValidPeople: List[Person] = {
-    personStringPairs.map {
+    val listOfPeopleOrErrors: List[Any] = personStringPairs.map {
       case (name, age) =>
         try {
-          ???
+          createPerson(name, age)
         } catch {
-          case _: EmptyNameException       => ???
+          case _: EmptyNameException => ""
+          case _: InvalidAgeRangeException => ""
+          case _: InvalidAgeValueException => ""
           //handle in any other exception here
         }
     }
+    listOfPeopleOrErrors.collect {
+      case p: Person => p
+    }
+  }
+
+  List(1,2,3,4).collect {
+    case x if x > 2 => x * 10
+  }
+
+  List(Person("Jack", 31), Person("Bob", 32)).collect {
+    case p @ Person("Jack", _) => p.copy(name = "Jack Low")
   }
 
   /**
@@ -125,17 +155,30 @@ object ExceptionExercises {
     *
     * scala> collectErrors
     * > List(InvalidAgeValueException: provided age is invalid: 5o,
-    *        InvalidAgeRangeException: provided age should be between 1-120: 200,
-    *        InvalidAgeRangeException: provided age should be between 1-120: 0,
-    *        EmptyNameException: provided name is empty)
+    * InvalidAgeRangeException: provided age should be between 1-120: 200,
+    * InvalidAgeRangeException: provided age should be between 1-120: 0,
+    * EmptyNameException: provided name is empty)
     *
     * Hint: Use `map` and `collect`
     *
     * What issues do you run into (if any)?
     */
   def collectErrors: List[Exception] = {
-    personStringPairs.map {
-      case (name, age) => ???
+    val listOfPeopleOrErrors: List[Any] = personStringPairs.map {
+      case (name, age) =>
+        try {
+          createPerson(name, age)
+        } catch {
+          case e: EmptyNameException => e
+          case e: InvalidAgeRangeException => e
+          case e: InvalidAgeValueException => e
+          //handle in any other exception here
+        }
+    }
+    listOfPeopleOrErrors.collect {
+      case e: EmptyNameException => e
+      case e: InvalidAgeRangeException => e
+      case e: InvalidAgeValueException => e
     }
   }
 }
